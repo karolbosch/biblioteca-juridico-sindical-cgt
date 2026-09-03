@@ -1,0 +1,41 @@
+{
+  "keywords": [
+    "trabajo",
+    "trabajador",
+    "laboral",
+    "empleo",
+    "despido",
+    "jornada",
+    "sindical",
+    "convenio",
+    "vacaciones",
+    "salario",
+    "discriminación",
+    "igualdad"
+  ],
+  "feeds": [
+    {
+      "name": "CURIA",
+      "source_type": "TJUE",
+      "url": "https://curia.europa.eu/site/rss.jsp?lang=es&secondLang=en",
+      "enabled": true,
+      "download_policy": "direct_pdf_only",
+      "public_document": true
+    },
+    {
+      "name": "EUR-Lex alerta laboral",
+      "source_type": "TJUE",
+      "url": "",
+      "enabled": false,
+      "download_policy": "direct_pdf_only",
+      "note": "Pegar aquí la URL RSS creada desde una búsqueda laboral de EUR-Lex."
+    }
+  ],
+  "restricted_sources": [
+    {
+      "name": "CENDOJ",
+      "mode": "authorized_reference_only",
+      "reason": "No realizar descarga masiva ni reutilización automatizada sin autorización o canal permitido por CGPJ/CENDOJ."
+    }
+  ]
+}

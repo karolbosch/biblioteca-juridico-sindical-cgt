@@ -1,0 +1,11 @@
+{
+  "name": "biblioteca-juridico-sindical-cgt",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "validate:data": "node tools/validate-corpus.js docs/data/documents.json",
+    "check": "npm run validate:data && npm test"
+  },
+  "engines": {"node": ">=20"}
+}

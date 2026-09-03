@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Proyecto de consultas de derecho laboral y acción sindical con respuestas motivadas y fuentes verificables.">
+  <meta name="theme-color" content="#d20a11">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Consultas CGT">
+  <title>Proyecto consultas Jurídico/Sindical</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon.svg">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="pwa.css">
+  <link rel="stylesheet" href="features.css">
+</head>
+<body>
+  <a class="skip" href="#consulta">Saltar a la consulta</a>
+  <header class="topbar">
+    <a class="brand" href="./" aria-label="Inicio">
+      <span class="mark">CGT</span>
+      <span><strong>Proyecto consultas Jurídico/Sindical</strong><small>La documentación es la autoridad</small></span>
+    </a>
+    <nav aria-label="Navegación principal">
+      <a href="#biblioteca">Biblioteca</a>
+      <a href="sector/contact-center/">Contact Center</a>
+      <button id="installApp" class="install-button" type="button" hidden>Instalar app</button>
+      <a href="admin/" class="nav-admin">Área privada</a>
+    </nav>
+  </header>
+
+  <main>
+    <section class="intro" aria-labelledby="page-title">
+      <div>
+        <p class="eyebrow">Derecho laboral · Acción sindical · España</p>
+        <h1 id="page-title">Una consulta jurídica empieza por fuentes fiables.</h1>
+        <p class="lead">Busca normativa, jurisprudencia, actuaciones de la ITSS y doctrina CGT. El sistema distingue la jerarquía de cada fuente y advierte si una resolución fue revocada.</p>
+      </div>
+      <aside class="trust-note" aria-label="Compromiso de fiabilidad">
+        <span class="trust-icon" aria-hidden="true">§</span>
+        <div><strong>Sin respuestas inventadas</strong><p>Si el dato no consta o la situación procesal no está verificada, se indica expresamente.</p></div>
+      </aside>
+    </section>
+
+    <section id="consulta" class="query-panel" aria-labelledby="query-title">
+      <div class="query-heading">
+        <div><p class="kicker">Consulta documental</p><h2 id="query-title">¿Qué quieres consultar?</h2></div>
+        <span id="agentStatus" class="status-dot">Modo documental local</span>
+      </div>
+      <form id="askForm" class="ask-form">
+        <label class="sr-only" for="question">Describe tu consulta</label>
+        <textarea id="question" rows="3" maxlength="1200" placeholder="Ej.: ¿Puede la empresa negarme una adaptación de jornada por cuidado de un menor?" required></textarea>
+        <button type="submit"><span>Consultar biblioteca</span><span aria-hidden="true">→</span></button>
+      </form>
+      <div id="chat" class="answer-area" aria-live="polite"></div>
+      <p class="disclaimer">Esta herramienta tiene finalidad documental y de apoyo a la acción sindical. No sustituye el asesoramiento jurídico profesional ni la valoración individual de cada caso.</p>
+    </section>
+
+    <section class="quick-links" aria-labelledby="quick-title">
+      <div class="section-title"><p class="kicker">Accesos directos</p><h2 id="quick-title">Materias frecuentes</h2></div>
+      <label class="topic-search"><span class="sr-only">Buscar una materia frecuente</span><input id="topicSearch" type="search" placeholder="Buscar materia, por ejemplo: horas sindicales"></label>
+      <div class="topic-grid">
+        <button class="topic" data-keywords="adaptación reducción conciliación jornada permisos registro horario vacaciones" data-query="adaptación de jornada conciliación"><span>01</span><strong>Conciliación y jornada</strong><small>Adaptación, reducción, permisos y registro horario</small></button>
+        <button class="topic" data-keywords="derechos sindicales horas sindicales crédito sindical rlpt comité delegados libertad sindical secciones" data-query="derechos RLPT comité de empresa libertad sindical"><span>02</span><strong>Derechos sindicales</strong><small>RLPT, información, horas y crédito sindical</small></button>
+        <button class="topic" data-keywords="despido represalias garantía indemnidad sanciones nulidad" data-query="despido garantía de indemnidad represalias"><span>03</span><strong>Despido y represalias</strong><small>Nulidad, garantía de indemnidad y sanciones</small></button>
+        <button class="topic" data-keywords="inspección trabajo itss acta requerimiento sanción denuncia" data-filter-type="itss"><span>04</span><strong>Inspección de Trabajo</strong><small>Requerimientos, actas y estado administrativo</small></button>
+      </div>
+    </section>
+
+    <section id="biblioteca" class="library" aria-labelledby="library-title">
+      <div class="section-title library-title"><div><p class="kicker">Corpus documental</p><h2 id="library-title">Explorar la biblioteca</h2><p id="counter" class="muted">Cargando inventario…</p></div><button id="toggleFilters" class="secondary" type="button" aria-expanded="true">Filtros avanzados</button></div>
+      <form id="filters" class="filters" role="search">
+        <label class="search-field"><span>Buscar</span><input id="q" type="search" placeholder="Materia, empresa, tribunal o resolución"></label>
+        <label><span>Tipo</span><select id="type"><option value="">Todos</option></select></label>
+        <label><span>Sector</span><select id="sector"><option value="">Todos</option></select></label>
+        <label><span>Órgano</span><select id="court"><option value="">Todos</option></select></label>
+        <label><span>Estado procesal</span><select id="status"><option value="">Todos</option></select></label>
+        <label class="check"><input id="onlyFinal" type="checkbox"><span>Solo autoridad final o firme</span></label>
+        <button id="clearFilters" type="button" class="link-button">Limpiar filtros</button>
+      </form>
+      <div id="results" class="results" aria-live="polite"></div>
+      <button id="loadMore" class="secondary load-more" type="button" hidden>Mostrar más resultados</button>
+    </section>
+  </main>
+
+  <footer><p>Proyecto consultas Jurídico/Sindical · CGT · Proyecto abierto y sin servicios de pago obligatorios</p><p>Norma ≠ jurisprudencia ≠ doctrina sindical ≠ actuación administrativa ≠ interpretación de IA.</p></footer>
+
+  <dialog id="detailDialog" aria-labelledby="detailTitle"><div id="detailContent"></div></dialog>
+  <script src="config.js"></script>
+  <script type="module" src="app.js?v=7"></script>
+  <script type="module" src="pwa.js"></script>
+</body>
+</html>
+
+
+

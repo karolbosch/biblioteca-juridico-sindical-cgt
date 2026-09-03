@@ -1,0 +1,6 @@
+{
+  "policy": "Solo se crean fichas PENDING_DOWNLOAD; ningún hallazgo se considera documento original hasta descargar y verificar la fuente.",
+  "daily": ["CENDOJ", "BOE", "Tribunal Constitucional", "CURIA", "EUR-Lex"],
+  "weekly": ["ITSS", "Ministerios", "INSST", "sindicatos", "universidades", "revistas jurídicas"],
+  "candidate_inbox": "data/discovery_inbox.json"
+}

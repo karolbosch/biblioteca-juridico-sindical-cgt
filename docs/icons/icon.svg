@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Biblioteca CGT">
+  <rect width="512" height="512" rx="88" fill="#8d1024"/>
+  <rect x="74" y="68" width="364" height="376" rx="28" fill="#fffefa"/>
+  <rect x="108" y="108" width="20" height="296" fill="#8d1024"/>
+  <text x="158" y="242" fill="#181716" font-family="Georgia,serif" font-size="112" font-weight="700">CGT</text>
+  <text x="158" y="340" fill="#8d1024" font-family="Georgia,serif" font-size="92">§</text>
+</svg>

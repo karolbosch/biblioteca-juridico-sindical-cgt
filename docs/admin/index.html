@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#d20a11">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <title>Administración · Proyecto consultas Jurídico/Sindical</title>
+  <link rel="manifest" href="../manifest.webmanifest">
+  <link rel="icon" href="../icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="../icons/icon.svg">
+  <link rel="stylesheet" href="../styles.css">
+  <link rel="stylesheet" href="../pwa.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="../"><span class="mark">CGT</span><span><strong>Proyecto consultas Jurídico/Sindical</strong><small>Área privada documental</small></span></a>
+    <nav><button id="installApp" class="install-button" type="button" hidden>Instalar app</button><a href="../">Biblioteca</a></nav>
+  </header>
+  <main>
+    <section class="intro"><div><p class="eyebrow">Acceso restringido</p><h1>Revisión, usuarios y sentencias.</h1><p class="lead">Los originales permanecen privados. Ninguna sentencia detectada o subida se publica sin una copia anonimizada y confirmación administrativa.</p></div></section>
+    <section class="query-panel">
+      <div id="loggedOut">
+        <div class="query-heading"><div><p class="kicker">Autenticación</p><h2>Iniciar sesión</h2></div></div>
+        <form id="login" class="admin-form">
+          <label>Usuario<input id="username" autocomplete="username" required></label>
+          <label>Contraseña<input id="password" type="password" autocomplete="current-password" required></label>
+          <button>Entrar</button>
+        </form>
+        <p id="loginMessage" class="form-message" aria-live="polite"></p>
+      </div>
+
+      <div id="loggedIn" hidden>
+        <div class="query-heading"><div><p class="kicker">Sesión activa</p><h2>Panel documental</h2><p id="sessionUser" class="session-user"></p></div><button id="logout" class="secondary">Cerrar sesión</button></div>
+        <div class="admin-grid">
+          <section class="admin-card">
+            <h3>Subir sentencia manualmente</h3>
+            <form id="upload" class="admin-form">
+              <div class="upload-fields">
+                <label class="wide">Sentencia en PDF<input id="file" type="file" accept="application/pdf,.pdf" required></label>
+                <label class="wide">Título de la resolución<input id="documentTitle" maxlength="240" required></label>
+                <label>Materia<input id="matter" maxlength="120" placeholder="Ej.: horas sindicales"></label>
+                <label>Órgano<select id="courtLevel"><option value="">No consta</option><option>TJUE</option><option>TC</option><option>TS</option><option>AN</option><option>TSJ</option><option>JS</option><option>TI</option></select></label>
+                <label>Número de resolución<input id="resolutionNumber" maxlength="80"></label>
+                <label>Fecha<input id="resolutionDate" type="date"></label>
+                <label class="wide">Estado procesal<select id="proceduralStatus"><option>SITUACION_PROCESAL_NO_VERIFICADA</option><option>SIN_CONSTANCIA_RECURSO</option><option>PENDIENTE_RECURSO</option><option>CONFIRMADA</option><option>CONFIRMADA_FIRME</option><option>REVOCADA</option><option>ANULADA_RETROACCION</option></select></label>
+                <label class="wide">Notas internas<textarea id="notes" rows="3" maxlength="1000"></textarea></label>
+              </div>
+              <button>Guardar original privado</button>
+            </form>
+            <p id="uploadMessage" class="form-message" aria-live="polite"></p>
+          </section>
+
+          <section id="userManagement" class="admin-card" hidden>
+            <h3>Crear usuario</h3>
+            <form id="createUser" class="admin-form">
+              <label>Nombre de usuario<input id="newUsername" minlength="3" maxlength="50" autocomplete="off" required></label>
+              <label>Contraseña temporal<input id="newPassword" type="password" minlength="8" maxlength="128" autocomplete="new-password" required></label>
+              <label>Permiso<select id="newRole"><option value="editor">Subir sentencias</option><option value="admin">Administrador</option></select></label>
+              <button>Crear usuario</button>
+            </form>
+            <p id="userMessage" class="form-message" aria-live="polite"></p>
+            <div id="userList" class="user-list"></div>
+          </section>
+        </div>
+        <section class="admin-card" style="margin-top:18px">
+          <h3>Sentencias recientes pendientes de verificación</h3>
+          <p>Abre cada candidata, comprueba la anonimización y decide si se publica o debe volver al proceso de anonimización.</p>
+          <div id="candidateList" class="results"></div>
+        </section>
+        <div class="topic-grid"><article class="topic"><span>01</span><strong>Pendientes</strong><small id="pendingCount">—</small></article><article class="topic"><span>02</span><strong>Revisión de privacidad</strong><small>Publicación bloqueada por defecto</small></article><article class="topic"><span>03</span><strong>Duplicados</strong><small>SHA-256, ECLI, ROJ y contenido</small></article><article class="topic"><span>04</span><strong>Cadenas procesales</strong><small>Estado y autoridad final</small></article></div>
+      </div>
+    </section>
+  </main>
+  <script src="../config.js"></script>
+  <script type="module" src="admin.js"></script>
+  <script type="module" src="../pwa.js"></script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+{
+  "name": "biblioteca-cgt-worker",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "test": "node --test ../tests/*.test.js",
+    "db:migrate:local": "wrangler d1 migrations apply biblioteca-juridica-cgt --local",
+    "db:migrate:remote": "wrangler d1 migrations apply biblioteca-juridica-cgt --remote"
+  },
+  "devDependencies": {"wrangler": "^4.30.0"}
+}
