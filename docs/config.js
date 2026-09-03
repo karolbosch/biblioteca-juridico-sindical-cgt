@@ -1,5 +1,5 @@
 window.APP_CONFIG = {
-  apiBaseUrl: "",
-  appName: "Proyecto consultas Jurídico/Sindical",
-  defaultPageSize: 12
+    apiBaseUrl: "https://biblioteca-juridica-cgt-api.karolbosch.workers.dev",
+    appName: "Proyecto consultas Jurídico/Sindical",
+    defaultPageSize: 12
 };
