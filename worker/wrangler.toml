@@ -1,0 +1,27 @@
+name = "biblioteca-juridica-cgt-api"
+main = "src/index.js"
+compatibility_date = "2026-08-01"
+compatibility_flags = ["nodejs_compat"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "biblioteca-juridica-cgt"
+database_id = "34ae840f-f63e-40c2-b596-d0c55fdb581e"
+migrations_dir = "migrations"
+
+[[r2_buckets]]
+binding = "ORIGINALS"
+bucket_name = "biblioteca-originales-privados"
+
+[[r2_buckets]]
+binding = "PUBLIC"
+bucket_name = "biblioteca-anonimizados-publicos"
+
+[ai]
+binding = "AI"
+
+[vars]
+ALLOWED_ORIGIN = "https://karolbosch.github.io"
+ADMIN_USER = "Karol"
+AI_MODEL = "@cf/meta/llama-3.2-3b-instruct"
+MAX_UPLOAD_BYTES = "20971520"
