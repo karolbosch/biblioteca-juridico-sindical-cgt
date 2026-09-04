@@ -1,0 +1,1 @@
+ALTER TABLE users ADD COLUMN telemarketing_access INTEGER NOT NULL DEFAULT 0;

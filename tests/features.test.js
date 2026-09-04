@@ -17,7 +17,7 @@ test("ordena ET, convenio, guía CGT y jurisprudencia",()=>{
 });
 
 test("valida usuarios creados para subir sentencias",()=>{
-  assert.deepEqual(validateNewUser({username:"delegada_1",password:"temporal123",role:"editor"}),{username:"delegada_1",password:"temporal123",role:"editor"});
+  assert.deepEqual(validateNewUser({username:"delegada_1",password:"temporal123",role:"editor"}),{username:"delegada_1",password:"temporal123",role:"editor",sector:null,telemarketingAccess:0});
   assert.match(validateNewUser({username:"x",password:"corta"}).error,/usuario/i);
 });
 
@@ -26,16 +26,18 @@ test("la PWA y el filtro de horas sindicales están declarados",async()=>{
   const html=await readFile(new URL("../docs/index.html",import.meta.url),"utf8");
   assert.equal(manifest.display,"standalone");
   assert.equal(manifest.name,"Proyecto consultas Jurídico/Sindical");
-  assert.match(html,/data-keywords="[^"]*horas sindicales[^"]*"[^>]*>[\s\S]*?Derechos sindicales/);
+  assert.match(html,/id="sectorHint"[^>]*required/);
+  assert.match(html,/value="__otro__"/);
 });
 test("la respuesta se deriva de las fuentes y no de una consulta programada",async()=>{
   const query="cauntos dias libres de permiso tengo por enfermedad de mi hermana";
   const withoutSources=ruleBasedAnswer(query,[]);
   assert.doesNotMatch(withoutSources,/cinco días de permiso retribuido/i);
   const docs=JSON.parse(await readFile(new URL("../docs/data/documents.json",import.meta.url),"utf8"));
-  const answer=ruleBasedAnswer(query,[docs.find(item=>item.id===77),docs.find(item=>item.id===4)]);
+  const permisoArticle=docs.find(item=>item.title==="Estatuto de los Trabajadores (RDL 2/2015) - Art. 37. Descanso semanal, fiestas y permisos");
+  const answer=ruleBasedAnswer(query,[permisoArticle]);
   assert.match(answer,/cinco días/i);
-  assert.match(answer,/37\.3\.b/);
+  assert.match(answer,/hospitalización/i);
   const app=await readFile(new URL("../docs/app.js",import.meta.url),"utf8");
   assert.doesNotMatch(app,/directLegalRule|familyIllness/);
   assert.match(app,/withFoundations/);

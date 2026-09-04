@@ -4,9 +4,26 @@ import{candidateFile,confirmCandidate,listCandidates,publicDocumentFile,requestR
 import{assertAllowedOrigin,cors,error,json,readJson}from"./http.js";
 import{rateLimit}from"./security.js";
 import{publishVersion,receiveUpload}from"./uploads.js";
-import{createUser,isAdmin,listUsers}from"./users.js";
+import{canAccessTelemarketing,canUpload,createUser,isAdmin,listUsers}from"./users.js";
+import{adminGetSettings,adminUpdateSettings,publicSettings}from"./settings.js";
+import{listHistory,recordQuery}from"./history.js";
+import{telemarketingLibrary}from"./telemarketing.js";
 
 async function audit(env,actor,action,entityType,entityId,details={}){await env.DB.prepare("INSERT INTO audit_log(actor,action,entity_type,entity_id,details_json) VALUES(?,?,?,?,?)").bind(actor,action,entityType,entityId,JSON.stringify(details)).run()}
+
+const SECTOR_LABELS={"contact-center":"Contact Center / Telemarketing","servicios":"Servicios (seguridad, limpieza, jardinería, taxi…)","construccion-metal-industria":"Construcción, Metal e Industria","comercio-finanzas-seguros":"Comercio, Banca y Seguros","social-dependencia-ensenanza":"Social, Dependencia y Enseñanza","hosteleria-turismo-alimentacion":"Hostelería, Turismo y Alimentación"};
+const SUBSECTOR_LABELS={"jardineria":"Jardinería","mantenimiento-instalaciones-acuaticas":"Instalaciones acuáticas","servicios-auxiliares":"Servicios auxiliares (recepción/control accesos)","autoescuelas":"Autoescuelas","auto-taxis":"Auto-Taxis","bingo":"Salas de bingo","peluquerias-gimnasios":"Peluquerías y gimnasios","seguridad-privada":"Seguridad privada","artes-graficas":"Artes gráficas","curtidos-peleteria":"Curtidos y peletería","textil-confeccion":"Textil y confección","pastas-papel-carton":"Pastas, papel y cartón","construccion":"Construcción","industria-quimica":"Industria química","metal":"Metal","industrias-extractivas-vidrio-ceramica":"Extractivas, vidrio y cerámica","atencion-discapacidad":"Atención a la discapacidad","ensenanza-privada-concertada":"Enseñanza privada concertada","atencion-dependencia":"Atención a la dependencia","ocio-educativo":"Ocio educativo","reforma-juvenil":"Reforma juvenil","accion-social":"Acción social","seguros":"Seguros","cooperativas-credito":"Cooperativas de crédito","banca":"Banca","cajas-ahorro":"Cajas de ahorro","establecimientos-financieros":"Establecimientos financieros de crédito","grandes-almacenes":"Grandes almacenes"};
+async function listSectors(env,headers){
+  const{results}=await env.DB.prepare("SELECT sector, submatter, count(*) c FROM documents WHERE privacy_status IN ('PUBLICABLE','ANONIMIZACION_VERIFICADA') AND sector IS NOT NULL AND sector!='' AND sector NOT IN ('laboral-general','catalogos') GROUP BY sector, submatter ORDER BY sector, c DESC").all();
+  const bySector=new Map();
+  for(const row of results||[]){
+    if(!bySector.has(row.sector))bySector.set(row.sector,{value:row.sector,label:SECTOR_LABELS[row.sector]||row.sector,count:0,subsectors:[]});
+    const entry=bySector.get(row.sector);entry.count+=row.c;
+    if(row.submatter)entry.subsectors.push({value:row.submatter,label:SUBSECTOR_LABELS[row.submatter]||row.submatter,count:row.c});
+  }
+  const sectors=[...bySector.values()].sort((a,b)=>b.count-a.count);
+  return json({sectors},200,headers)
+}
 
 export async function route(request,env){
   const url=new URL(request.url),headers=cors(env,request);
@@ -21,7 +38,20 @@ export async function route(request,env){
     let body;try{body=await readJson(request)}catch{return error("Petición inválida",400,headers)}
     const question=String(body.question||"").trim();
     if(question.length<3||question.length>1200)return error("La pregunta debe tener entre 3 y 1200 caracteres",400,headers);
-    return json(await answerQuestion(env,question,body.filters||{}),200,headers)
+    const answer=await answerQuestion(env,question,body.filters||{});
+    const sessionUser=await requireSession(request,env,false);
+    if(sessionUser)await recordQuery(env,sessionUser,question,answer.answer,answer.mode);
+    return json(answer,200,headers)
+  }
+  if(url.pathname==="/api/me"&&request.method==="GET"){
+    const sessionUser=await requireSession(request,env,false);
+    if(!sessionUser)return json({authenticated:false},200,headers);
+    return json({authenticated:true,username:sessionUser.username,role:sessionUser.role,sector:sessionUser.sector||null,telemarketing_access:Boolean(sessionUser.telemarketing_access)},200,headers)
+  }
+  if(url.pathname==="/api/telemarketing-library"&&request.method==="GET"){
+    const sessionUser=await requireSession(request,env,false);
+    if(!sessionUser||!canAccessTelemarketing(sessionUser))return error("No autorizado",403,headers);
+    return telemarketingLibrary(env,headers,url)
   }
   if(url.pathname==="/api/documents"&&request.method==="GET"){
     const{results}=await env.DB.prepare("SELECT id,title,document_type,source_type,sector,court_level,resolution_number,date,matter,procedural_status,privacy_status,source_url,chain_id,final_authority,summary,pdf_public_path FROM documents WHERE privacy_status IN ('PUBLICABLE','ANONIMIZACION_VERIFICADA') ORDER BY date DESC LIMIT 200").all();
@@ -29,6 +59,8 @@ export async function route(request,env){
   }
   const publicFile=url.pathname.match(/^\/api\/documents\/(\d+)\/file$/);
   if(publicFile&&request.method==="GET")return publicDocumentFile(env,headers,publicFile[1]);
+  if(url.pathname==="/api/settings"&&request.method==="GET")return publicSettings(env,headers);
+  if(url.pathname==="/api/sectors"&&request.method==="GET")return listSectors(env,headers);
 
   if(url.pathname.startsWith("/api/admin/")){
     const write=request.method!=="GET",user=await requireSession(request,env,write);
@@ -39,7 +71,10 @@ export async function route(request,env){
     }
     if(url.pathname==="/api/admin/users"&&request.method==="GET")return isAdmin(user)?listUsers(env,headers):error("Solo administración puede gestionar usuarios",403,headers);
     if(url.pathname==="/api/admin/users"&&request.method==="POST")return isAdmin(user)?createUser(request,env,headers,user):error("Solo administración puede gestionar usuarios",403,headers);
-    if(url.pathname==="/api/admin/uploads"&&request.method==="POST")return receiveUpload(request,env,headers,user);
+    if(url.pathname==="/api/admin/settings"&&request.method==="GET")return isAdmin(user)?adminGetSettings(env,headers):error("Solo administración puede ver los ajustes",403,headers);
+    if(url.pathname==="/api/admin/settings"&&request.method==="PUT")return isAdmin(user)?adminUpdateSettings(request,env,headers,user):error("Solo administración puede editar los ajustes",403,headers);
+    if(url.pathname==="/api/admin/uploads"&&request.method==="POST")return canUpload(user)?receiveUpload(request,env,headers,user):error("Este usuario no tiene permiso para subir documentos",403,headers);
+    if(url.pathname==="/api/admin/history"&&request.method==="GET")return listHistory(env,headers,user);
     const publish=url.pathname.match(/^\/api\/admin\/uploads\/([^/]+)\/publish$/);
     if(publish&&request.method==="POST")return publishVersion(request,env,headers,user,publish[1]);
     if(url.pathname==="/api/admin/candidates"&&request.method==="GET")return listCandidates(env,headers);

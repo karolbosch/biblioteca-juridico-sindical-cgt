@@ -7,7 +7,7 @@ copias públicas solo si el metadato privacy_status es ANONIMIZACION_VERIFICADA.
 from __future__ import annotations
 import argparse, csv, hashlib, json, mimetypes, pathlib, sqlite3, subprocess, sys
 
-FIELDS = ["title","document_type","sector","court_level","resolution_number","date","year","company","matter","outcome","procedural_status","privacy_status","source_url","source_type","document_status","chain_id","final_authority","current_rule_summary","summary","criteria","ecli","roj","case_number","appeal_number"]
+FIELDS = ["title","document_type","sector","submatter","court_level","resolution_number","date","year","company","matter","outcome","procedural_status","privacy_status","source_url","source_type","document_status","chain_id","final_authority","current_rule_summary","summary","criteria","ecli","roj","case_number","appeal_number"]
 
 def sha256(path: pathlib.Path) -> str:
     h=hashlib.sha256()

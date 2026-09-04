@@ -1,12 +1,13 @@
 import{detectFile,digestHex,safeFilename}from"./security.js";
 import{initialPrivacyStatus,mayPublish}from"./privacy.js";
 import{error,json}from"./http.js";
+import{getSetting}from"./settings.js";
 
 export async function receiveUpload(request,env,headers,user){
   const form=await request.formData(),file=form.get("file"),documentType=String(form.get("document_type")||"sentencia"),title=String(form.get("title")||"").trim();
   if(!file||typeof file.arrayBuffer!=="function")return error("Falta el archivo",400,headers);
   if(documentType==="sentencia"&&!title)return error("El título de la sentencia es obligatorio",400,headers);
-  const max=Number(env.MAX_UPLOAD_BYTES||20971520);
+  const max=Number(await getSetting(env,"max_upload_bytes",env.MAX_UPLOAD_BYTES||20971520));
   if(file.size>max)return error(`El archivo supera el límite de ${Math.floor(max/1048576)} MB`,413,headers);
   const buffer=await file.arrayBuffer(),bytes=new Uint8Array(buffer),kind=detectFile(bytes,file.type,file.name);
   if(!kind)return error("El contenido no coincide con un PDF o ZIP válido",415,headers);

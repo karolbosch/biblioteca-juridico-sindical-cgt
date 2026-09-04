@@ -11,6 +11,8 @@
   <link rel="apple-touch-icon" href="../icons/icon.svg">
   <link rel="stylesheet" href="../styles.css">
   <link rel="stylesheet" href="../pwa.css">
+  <link rel="stylesheet" href="../themes.css">
+  <script>(function(){var t=localStorage.getItem("cgt_theme");if(t&&t!=="clasico")document.documentElement.setAttribute("data-theme",t)})();</script>
 </head>
 <body>
   <header class="topbar">
@@ -33,7 +35,7 @@
       <div id="loggedIn" hidden>
         <div class="query-heading"><div><p class="kicker">Sesión activa</p><h2>Panel documental</h2><p id="sessionUser" class="session-user"></p></div><button id="logout" class="secondary">Cerrar sesión</button></div>
         <div class="admin-grid">
-          <section class="admin-card">
+          <section id="uploadCard" class="admin-card" hidden>
             <h3>Subir sentencia manualmente</h3>
             <form id="upload" class="admin-form">
               <div class="upload-fields">
@@ -51,24 +53,65 @@
             <p id="uploadMessage" class="form-message" aria-live="polite"></p>
           </section>
 
+          <section id="historyCard" class="admin-card">
+            <h3>Mis consultas</h3>
+            <p>Historial de las preguntas que has hecho a la biblioteca con esta cuenta.</p>
+            <div id="historyList" class="user-list"></div>
+          </section>
+
           <section id="userManagement" class="admin-card" hidden>
             <h3>Crear usuario</h3>
             <form id="createUser" class="admin-form">
               <label>Nombre de usuario<input id="newUsername" minlength="3" maxlength="50" autocomplete="off" required></label>
               <label>Contraseña temporal<input id="newPassword" type="password" minlength="8" maxlength="128" autocomplete="new-password" required></label>
-              <label>Permiso<select id="newRole"><option value="editor">Subir sentencias</option><option value="admin">Administrador</option></select></label>
+              <label>Permiso<select id="newRole">
+                <option value="consultante">Solo consulta (con histórico)</option>
+                <option value="editor">Subir sentencias</option>
+                <option value="admin">Administrador</option>
+              </select></label>
+              <label>Sector de esta persona<select id="newSector">
+                <option value="">No lo sé / varios sectores</option>
+                <option value="contact-center">Telemarketing (Contact Center)</option>
+                <option value="servicios">Servicios (seguridad, limpieza, jardinería, taxi…)</option>
+                <option value="construccion-metal-industria">Construcción, Metal e Industria</option>
+                <option value="comercio-finanzas-seguros">Comercio, Banca y Seguros</option>
+                <option value="social-dependencia-ensenanza">Social, Dependencia y Enseñanza</option>
+                <option value="hosteleria-turismo-alimentacion">Hostelería, Turismo y Alimentación</option>
+              </select></label>
+              <label class="check"><input id="newTelemarketingAccess" type="checkbox"><span>Dar acceso a la Biblioteca Telemarketing (interna)</span></label>
               <button>Crear usuario</button>
             </form>
             <p id="userMessage" class="form-message" aria-live="polite"></p>
             <div id="userList" class="user-list"></div>
           </section>
+
+          <section id="settingsCard" class="admin-card" hidden>
+            <h3>Ajustes</h3>
+            <form id="settingsForm" class="admin-form">
+              <label class="wide">Nombre de la aplicación<input id="settingAppName" maxlength="120" required></label>
+              <label>Resultados por página<input id="settingPageSize" type="number" min="4" max="60" required></label>
+              <label>Límite de subida (MB)<input id="settingMaxUploadMb" type="number" min="1" max="200" required></label>
+              <label>Tema por defecto para visitantes nuevos<select id="settingTheme">
+                <option value="clasico">Clásico</option>
+                <option value="oscuro">Oscuro</option>
+                <option value="alto-contraste">Alto contraste</option>
+                <option value="sepia">Sepia</option>
+                <option value="azul">Azul</option>
+                <option value="verde">Verde</option>
+              </select></label>
+              <button>Guardar ajustes</button>
+            </form>
+            <p id="settingsMessage" class="form-message" aria-live="polite"></p>
+          </section>
         </div>
-        <section class="admin-card" style="margin-top:18px">
-          <h3>Sentencias recientes pendientes de verificación</h3>
-          <p>Abre cada candidata, comprueba la anonimización y decide si se publica o debe volver al proceso de anonimización.</p>
-          <div id="candidateList" class="results"></div>
-        </section>
-        <div class="topic-grid"><article class="topic"><span>01</span><strong>Pendientes</strong><small id="pendingCount">—</small></article><article class="topic"><span>02</span><strong>Revisión de privacidad</strong><small>Publicación bloqueada por defecto</small></article><article class="topic"><span>03</span><strong>Duplicados</strong><small>SHA-256, ECLI, ROJ y contenido</small></article><article class="topic"><span>04</span><strong>Cadenas procesales</strong><small>Estado y autoridad final</small></article></div>
+        <div id="reviewSection" hidden>
+          <section class="admin-card" style="margin-top:18px">
+            <h3>Sentencias recientes pendientes de verificación</h3>
+            <p>Abre cada candidata, comprueba la anonimización y decide si se publica o debe volver al proceso de anonimización.</p>
+            <div id="candidateList" class="results"></div>
+          </section>
+          <div class="topic-grid"><article class="topic"><span>01</span><strong>Pendientes</strong><small id="pendingCount">—</small></article><article class="topic"><span>02</span><strong>Revisión de privacidad</strong><small>Publicación bloqueada por defecto</small></article><article class="topic"><span>03</span><strong>Duplicados</strong><small>SHA-256, ECLI, ROJ y contenido</small></article><article class="topic"><span>04</span><strong>Cadenas procesales</strong><small>Estado y autoridad final</small></article></div>
+        </div>
       </div>
     </section>
   </main>

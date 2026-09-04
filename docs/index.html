@@ -15,33 +15,43 @@
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="pwa.css">
   <link rel="stylesheet" href="features.css">
+  <link rel="stylesheet" href="themes.css">
+  <script>(function(){var t=localStorage.getItem("cgt_theme");if(t&&t!=="clasico")document.documentElement.setAttribute("data-theme",t)})();</script>
 </head>
 <body>
   <a class="skip" href="#consulta">Saltar a la consulta</a>
   <header class="topbar">
     <a class="brand" href="./" aria-label="Inicio">
-      <span class="mark">CGT</span>
-      <span><strong>Proyecto consultas Jurídico/Sindical</strong><small>La documentación es la autoridad</small></span>
+      <span class="mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 2a1 1 0 0 1 1 1v1.2a2.5 2.5 0 0 1 3.5 2.3v.7a2 2 0 0 1 2.6 1.9v.4a2 2 0 0 1 2.4 2v3.6c0 3.3-2.7 6-6 6H9.8c-1.9 0-3.7-.9-4.8-2.5L2.3 14a1.6 1.6 0 0 1 2.4-2.1L6 13.2V3a1 1 0 0 1 1-1Z"/></svg></span>
+      <span><strong id="brandName">Proyecto consultas Jurídico/Sindical</strong><small>La documentación es la autoridad</small></span>
     </a>
     <nav aria-label="Navegación principal">
       <a href="#biblioteca">Biblioteca</a>
       <a href="sector/contact-center/">Contact Center</a>
+      <select id="themePicker" class="theme-picker" aria-label="Tema visual">
+        <option value="clasico">Tema: Clásico</option>
+        <option value="oscuro">Tema: Oscuro</option>
+        <option value="alto-contraste">Tema: Alto contraste</option>
+        <option value="sepia">Tema: Sepia</option>
+        <option value="azul">Tema: Azul</option>
+        <option value="verde">Tema: Verde</option>
+      </select>
+      <a id="shareWhatsapp" class="whatsapp-share" href="#" target="_blank" rel="noopener" aria-label="Compartir por WhatsApp"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M17.5 14.4c-.3-.1-1.7-.8-1.9-.9-.3-.1-.4-.1-.6.1-.2.3-.7.9-.8 1-.2.2-.3.2-.5.1-.3-.1-1.1-.4-2.1-1.3-.8-.7-1.3-1.6-1.5-1.8-.2-.3 0-.4.1-.6.1-.1.3-.3.4-.5.1-.1.2-.3.2-.4.1-.2 0-.3 0-.5-.1-.1-.6-1.5-.9-2-.2-.5-.4-.5-.6-.5h-.5c-.2 0-.5.1-.7.3-.2.3-.9.9-.9 2.2s1 2.6 1.1 2.8c.1.2 2 3 4.7 4.2.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.5-.1 1.7-.7 1.9-1.4.2-.7.2-1.2.2-1.4-.1-.1-.3-.2-.5-.3Z"/><path d="M12 2C6.5 2 2 6.5 2 12c0 1.8.5 3.6 1.4 5.1L2 22l5-1.3c1.5.8 3.2 1.3 4.9 1.3 5.5 0 10-4.5 10-10S17.5 2 12 2Zm0 18.2c-1.6 0-3.1-.4-4.4-1.2l-.3-.2-3 .8.8-2.9-.2-.3C4.2 15 3.7 13.5 3.7 12 3.7 7.4 7.4 3.7 12 3.7S20.3 7.4 20.3 12 16.6 20.2 12 20.2Z"/></svg><span>Compartir</span></a>
+      <button id="telemarketingLibraryBtn" class="whatsapp-share" type="button" hidden>📡 <span>Biblioteca Telemarketing</span></button>
       <button id="installApp" class="install-button" type="button" hidden>Instalar app</button>
       <a href="admin/" class="nav-admin">Área privada</a>
     </nav>
   </header>
 
   <main>
-    <section class="intro" aria-labelledby="page-title">
-      <div>
-        <p class="eyebrow">Derecho laboral · Acción sindical · España</p>
-        <h1 id="page-title">Una consulta jurídica empieza por fuentes fiables.</h1>
-        <p class="lead">Busca normativa, jurisprudencia, actuaciones de la ITSS y doctrina CGT. El sistema distingue la jerarquía de cada fuente y advierte si una resolución fue revocada.</p>
-      </div>
-      <aside class="trust-note" aria-label="Compromiso de fiabilidad">
-        <span class="trust-icon" aria-hidden="true">§</span>
-        <div><strong>Sin respuestas inventadas</strong><p>Si el dato no consta o la situación procesal no está verificada, se indica expresamente.</p></div>
-      </aside>
+    <section class="intro intro-compact" aria-labelledby="page-title">
+      <p class="eyebrow">Derecho laboral · Acción sindical · España</p>
+      <h1 id="page-title">Pregunta. Citamos la fuente. <mark>Nunca nos la inventamos</mark>.</h1>
+    </section>
+
+    <section id="sectorBanner" class="sector-banner" hidden>
+      <img id="sectorHeroImg" alt="Ilustración reivindicativa del sector" loading="lazy">
+      <p id="sectorHeroLabel"></p>
     </section>
 
     <section id="consulta" class="query-panel" aria-labelledby="query-title">
@@ -49,37 +59,42 @@
         <div><p class="kicker">Consulta documental</p><h2 id="query-title">¿Qué quieres consultar?</h2></div>
         <span id="agentStatus" class="status-dot">Modo documental local</span>
       </div>
+      <label class="sector-hint-field" for="sectorHint">Tu sector <span class="required-mark" aria-hidden="true">*</span>
+        <select id="sectorHint" required>
+          <option value="" disabled selected>Elige tu sector para empezar</option>
+          <option value="__otro__">Otro sector (no listado)</option>
+        </select>
+      </label>
+      <label class="sector-hint-field" id="subsectorField" hidden for="subsectorHint">Actividad concreta dentro del sector
+        <select id="subsectorHint"><option value="">Todas las de este sector</option></select>
+      </label>
+      <label class="sector-hint-field" id="otherSectorField" hidden for="otherSectorInput">¿Cuál es tu sector?
+        <input id="otherSectorInput" type="text" maxlength="80" placeholder="Ej.: acuicultura, videojuegos…">
+      </label>
+      <small class="sector-hint-note">Ajusta la respuesta y prioriza la normativa de tu sector, además del Estatuto y la doctrina CGT. Si tu sector no tiene convenio propio en la biblioteca, se avisa y se responde con normativa general.</small>
       <form id="askForm" class="ask-form">
         <label class="sr-only" for="question">Describe tu consulta</label>
-        <textarea id="question" rows="3" maxlength="1200" placeholder="Ej.: ¿Puede la empresa negarme una adaptación de jornada por cuidado de un menor?" required></textarea>
-        <button type="submit"><span>Consultar biblioteca</span><span aria-hidden="true">→</span></button>
+        <textarea id="question" rows="3" maxlength="1200" placeholder="Elige primero tu sector arriba…" required disabled></textarea>
+        <button type="submit" id="askSubmit" disabled><span>Consultar biblioteca</span><span aria-hidden="true">→</span></button>
       </form>
       <div id="chat" class="answer-area" aria-live="polite"></div>
       <p class="disclaimer">Esta herramienta tiene finalidad documental y de apoyo a la acción sindical. No sustituye el asesoramiento jurídico profesional ni la valoración individual de cada caso.</p>
     </section>
 
-    <section class="quick-links" aria-labelledby="quick-title">
-      <div class="section-title"><p class="kicker">Accesos directos</p><h2 id="quick-title">Materias frecuentes</h2></div>
-      <label class="topic-search"><span class="sr-only">Buscar una materia frecuente</span><input id="topicSearch" type="search" placeholder="Buscar materia, por ejemplo: horas sindicales"></label>
-      <div class="topic-grid">
-        <button class="topic" data-keywords="adaptación reducción conciliación jornada permisos registro horario vacaciones" data-query="adaptación de jornada conciliación"><span>01</span><strong>Conciliación y jornada</strong><small>Adaptación, reducción, permisos y registro horario</small></button>
-        <button class="topic" data-keywords="derechos sindicales horas sindicales crédito sindical rlpt comité delegados libertad sindical secciones" data-query="derechos RLPT comité de empresa libertad sindical"><span>02</span><strong>Derechos sindicales</strong><small>RLPT, información, horas y crédito sindical</small></button>
-        <button class="topic" data-keywords="despido represalias garantía indemnidad sanciones nulidad" data-query="despido garantía de indemnidad represalias"><span>03</span><strong>Despido y represalias</strong><small>Nulidad, garantía de indemnidad y sanciones</small></button>
-        <button class="topic" data-keywords="inspección trabajo itss acta requerimiento sanción denuncia" data-filter-type="itss"><span>04</span><strong>Inspección de Trabajo</strong><small>Requerimientos, actas y estado administrativo</small></button>
-      </div>
-    </section>
-
     <section id="biblioteca" class="library" aria-labelledby="library-title">
-      <div class="section-title library-title"><div><p class="kicker">Corpus documental</p><h2 id="library-title">Explorar la biblioteca</h2><p id="counter" class="muted">Cargando inventario…</p></div><button id="toggleFilters" class="secondary" type="button" aria-expanded="true">Filtros avanzados</button></div>
-      <form id="filters" class="filters" role="search">
-        <label class="search-field"><span>Buscar</span><input id="q" type="search" placeholder="Materia, empresa, tribunal o resolución"></label>
+      <div class="section-title library-title"><div><p class="kicker">Corpus documental</p><h2 id="library-title">Buscar en la biblioteca</h2><p id="counter" class="muted">La búsqueda tendrá en cuenta el sector elegido arriba.</p></div></div>
+      <form id="filters" class="filters filters-minimal" role="search">
+        <label class="search-field wide"><span>Buscar</span><input id="q" type="search" placeholder="Ej.: permisos, excedencia, horas sindicales…"></label>
+      </form>
+      <button id="toggleAdvanced" class="secondary" type="button" hidden aria-expanded="false">Filtros avanzados</button>
+      <div id="advancedFilters" class="filters" hidden>
         <label><span>Tipo</span><select id="type"><option value="">Todos</option></select></label>
         <label><span>Sector</span><select id="sector"><option value="">Todos</option></select></label>
         <label><span>Órgano</span><select id="court"><option value="">Todos</option></select></label>
         <label><span>Estado procesal</span><select id="status"><option value="">Todos</option></select></label>
         <label class="check"><input id="onlyFinal" type="checkbox"><span>Solo autoridad final o firme</span></label>
         <button id="clearFilters" type="button" class="link-button">Limpiar filtros</button>
-      </form>
+      </div>
       <div id="results" class="results" aria-live="polite"></div>
       <button id="loadMore" class="secondary load-more" type="button" hidden>Mostrar más resultados</button>
     </section>
@@ -88,6 +103,18 @@
   <footer><p>Proyecto consultas Jurídico/Sindical · CGT · Proyecto abierto y sin servicios de pago obligatorios</p><p>Norma ≠ jurisprudencia ≠ doctrina sindical ≠ actuación administrativa ≠ interpretación de IA.</p></footer>
 
   <dialog id="detailDialog" aria-labelledby="detailTitle"><div id="detailContent"></div></dialog>
+  <dialog id="viewerDialog" class="telemarketing-dialog viewer-dialog"><div id="viewerContent"></div></dialog>
+  <dialog id="telemarketingDialog" aria-labelledby="telemarketingTitle" class="telemarketing-dialog">
+    <button class="dialog-close" id="closeTelemarketing" aria-label="Cerrar">✕</button>
+    <div class="detail">
+      <p class="eyebrow">Acceso restringido</p>
+      <h2 id="telemarketingTitle">Biblioteca Telemarketing</h2>
+      <p class="muted">Documentación interna del sector Contact Center, organizada por materia.</p>
+      <label class="search-field wide"><span>Buscar</span><input id="telemarketingSearch" type="search" placeholder="Buscar dentro de la biblioteca de Telemarketing…"></label>
+      <div id="telemarketingCategories" class="topic-grid telemarketing-categories"></div>
+      <div id="telemarketingResults" class="results telemarketing-results"></div>
+    </div>
+  </dialog>
   <script src="config.js"></script>
   <script type="module" src="app.js?v=7"></script>
   <script type="module" src="pwa.js"></script>
