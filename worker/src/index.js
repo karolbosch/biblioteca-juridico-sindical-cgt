@@ -83,10 +83,10 @@ export async function route(request,env){
     if(candidate&&request.method==="POST"&&candidate[2]==="confirm")return confirmCandidate(request,env,headers,user,candidate[1]);
     if(candidate&&request.method==="POST"&&candidate[2]==="reanonymize")return requestReanonymization(env,headers,user,candidate[1]);
   }
-  return error("No encontrado",404,headers)
+    return error("No encontrado",404,headers)
 }
 
 export default{
-  async fetch(request,env){try{return await route(request,env)}catch(caught){console.error(caught);return error("Error interno",500,cors(env,request))}},
-  async scheduled(event,env,ctx){ctx.waitUntil(Promise.all([env.DB.prepare("DELETE FROM sessions WHERE expires_at<?").bind(Date.now()).run(),env.DB.prepare("DELETE FROM rate_limits WHERE expires_at<?").bind(Math.floor(Date.now()/1000)).run(),audit(env,"system","SCHEDULED_MAINTENANCE","system",String(event.scheduledTime))]))}
+    async fetch(request,env){try{return await route(request,env)}catch(caught){console.error(caught);return error("Error interno",500,cors(env,request))}},
+    async scheduled(event,env,ctx){ctx.waitUntil(Promise.all([env.DB.prepare("DELETE FROM sessions WHERE expires_at<?").bind(Date.now()).run(),env.DB.prepare("DELETE FROM rate_limits WHERE expires_at<?").bind(Math.floor(Date.now()/1000)).run(),audit(env,"system","SCHEDULED_MAINTENANCE","system",String(event.scheduledTime))]))}
 };

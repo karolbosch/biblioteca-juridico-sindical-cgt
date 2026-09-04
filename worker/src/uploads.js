@@ -21,11 +21,11 @@ export async function receiveUpload(request,env,headers,user){
 }
 
 export async function publishVersion(request,env,headers,user,id){
-  const review=await env.DB.prepare("SELECT * FROM privacy_reviews WHERE upload_id=? ORDER BY reviewed_at DESC LIMIT 1").bind(id).first();
-  if(!mayPublish(review))return error("Publicación bloqueada: falta anonimización verificada por una persona y auditoría residual limpia",409,headers);
-  const upload=await env.DB.prepare("SELECT * FROM uploads WHERE id=?").bind(id).first();
-  if(!upload?.anonymized_key)return error("No existe copia anonimizada",409,headers);
-  await env.DB.prepare("UPDATE uploads SET status='PUBLICABLE',privacy_status='PUBLICABLE' WHERE id=?").bind(id).run();
-  await env.DB.prepare("INSERT INTO audit_log(actor,action,entity_type,entity_id) VALUES(?,?,?,?)").bind(user.username,"PUBLISH_APPROVED_ANONYMIZED_COPY","upload",id).run();
-  return json({ok:true,status:"PUBLICABLE"},200,headers)
+    const review=await env.DB.prepare("SELECT * FROM privacy_reviews WHERE upload_id=? ORDER BY reviewed_at DESC LIMIT 1").bind(id).first();
+    if(!mayPublish(review))return error("Publicación bloqueada: falta anonimización verificada por una persona y auditoría residual limpia",409,headers);
+    const upload=await env.DB.prepare("SELECT * FROM uploads WHERE id=?").bind(id).first();
+    if(!upload?.anonymized_key)return error("No existe copia anonimizada",409,headers);
+    await env.DB.prepare("UPDATE uploads SET status='PUBLICABLE',privacy_status='PUBLICABLE' WHERE id=?").bind(id).run();
+    await env.DB.prepare("INSERT INTO audit_log(actor,action,entity_type,entity_id) VALUES(?,?,?,?)").bind(user.username,"PUBLISH_APPROVED_ANONYMIZED_COPY","upload",id).run();
+    return json({ok:true,status:"PUBLICABLE"},200,headers)
 }
