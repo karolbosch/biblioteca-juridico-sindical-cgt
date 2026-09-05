@@ -1,15 +1,19 @@
 import{LEGAL_DISCLAIMER,orderSourcesForDisplay,retrieve,ruleBasedAnswer,sourcesFooter,TOPIC_CATEGORIES,categorizeTopic,isCaselaw}from"./search.js";
 async function callGemini(env,system,userContent){
   const model=env.GEMINI_MODEL||"gemini-2.5-flash";
-  const response=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${env.GEMINI_API_KEY}`,{
-    method:"POST",headers:{"content-type":"application/json"},
-    body:JSON.stringify({systemInstruction:{parts:[{text:system}]},contents:[{role:"user",parts:[{text:userContent}]}],generationConfig:{temperature:.1,maxOutputTokens:2000,thinkingConfig:{thinkingLevel:"low"}}})
-  });
-  if(!response.ok)throw new Error(`GEMINI_ERROR_${response.status}`);
-  const data=await response.json();
-  const text=data?.candidates?.[0]?.content?.parts?.map(p=>p.text).join("")||"";
-  if(!text)throw new Error("GEMINI_EMPTY_RESPONSE");
-  return text
+  const controller=new AbortController();
+  const timeout=setTimeout(()=>controller.abort(),9000);
+  try{
+    const response=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${env.GEMINI_API_KEY}`,{
+      method:"POST",headers:{"content-type":"application/json"},signal:controller.signal,
+      body:JSON.stringify({systemInstruction:{parts:[{text:system}]},contents:[{role:"user",parts:[{text:userContent}]}],generationConfig:{temperature:.1,maxOutputTokens:2000,thinkingConfig:{thinkingLevel:"low"}}})
+    });
+    if(!response.ok)throw new Error(`GEMINI_ERROR_${response.status}`);
+    const data=await response.json();
+    const text=data?.candidates?.[0]?.content?.parts?.map(p=>p.text).join("")||"";
+    if(!text)throw new Error("GEMINI_EMPTY_RESPONSE");
+    return text
+  }finally{clearTimeout(timeout)}
 }
 async function callCloudflareAI(env,system,userContent){
   if(!env.AI)throw new Error("AI_UNAVAILABLE");
@@ -20,7 +24,7 @@ async function callModel(env,system,userContent){
   if(env.GEMINI_API_KEY){
     for(let attempt=1;attempt<=3;attempt++){
       try{return await callGemini(env,system,userContent)}
-      catch(err){if(attempt<3)await new Promise(r=>setTimeout(r,400*attempt))}
+      catch(err){if(attempt<3)await new Promise(r=>setTimeout(r,200))}
     }
     return callCloudflareAI(env,system,userContent)
   }
