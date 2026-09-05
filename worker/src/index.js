@@ -8,6 +8,7 @@ import{canAccessTelemarketing,canUpload,createUser,isAdmin,listUsers}from"./user
 import{adminGetSettings,adminUpdateSettings,publicSettings}from"./settings.js";
 import{listHistory,recordQuery}from"./history.js";
 import{telemarketingLibrary}from"./telemarketing.js";
+import{embedMissingBatch}from"./semantic.js";
 
 async function audit(env,actor,action,entityType,entityId,details={}){await env.DB.prepare("INSERT INTO audit_log(actor,action,entity_type,entity_id,details_json) VALUES(?,?,?,?,?)").bind(actor,action,entityType,entityId,JSON.stringify(details)).run()}
 
@@ -61,6 +62,7 @@ export async function route(request,env){
   if(publicFile&&request.method==="GET")return publicDocumentFile(env,headers,publicFile[1]);
   if(url.pathname==="/api/settings"&&request.method==="GET")return publicSettings(env,headers);
   if(url.pathname==="/api/sectors"&&request.method==="GET")return listSectors(env,headers);
+  if(url.pathname==="/api/_test_embedding"&&request.method==="GET"){const r=await env.AI.run("@cf/baai/bge-m3",{text:["cuantos dias tengo de vacaciones"]});return json(r,200,headers)}
 
   if(url.pathname.startsWith("/api/admin/")){
     const write=request.method!=="GET",user=await requireSession(request,env,write);
@@ -75,6 +77,7 @@ export async function route(request,env){
     if(url.pathname==="/api/admin/settings"&&request.method==="PUT")return isAdmin(user)?adminUpdateSettings(request,env,headers,user):error("Solo administración puede editar los ajustes",403,headers);
     if(url.pathname==="/api/admin/uploads"&&request.method==="POST")return canUpload(user)?receiveUpload(request,env,headers,user):error("Este usuario no tiene permiso para subir documentos",403,headers);
     if(url.pathname==="/api/admin/history"&&request.method==="GET")return listHistory(env,headers,user);
+    if(url.pathname==="/api/admin/embed-missing"&&request.method==="POST")return isAdmin(user)?embedMissingBatch(env,headers,json,Number(new URL(request.url).searchParams.get("limit"))||25):error("Solo administración",403,headers);
     const publish=url.pathname.match(/^\/api\/admin\/uploads\/([^/]+)\/publish$/);
     if(publish&&request.method==="POST")return publishVersion(request,env,headers,user,publish[1]);
     if(url.pathname==="/api/admin/candidates"&&request.method==="GET")return listCandidates(env,headers);
