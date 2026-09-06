@@ -2,9 +2,9 @@ import{semanticRank}from"./semantic.js";
 export const ADVERSE_STATUSES=new Set(["REVOCADA","ANULADA","CASADA_TOTALMENTE","SUPERADA_DOCTRINALMENTE"]);
 export const LEGAL_DISCLAIMER="AVISO\n\nEsta respuesta puede contener errores y no sustituye el asesoramiento jurídico profesional. Antes de tomar cualquier decisión, consulte a su delegado o delegada sindical, a la asesoría externa o a un/a letrado/a.";
 const hierarchy={TJUE:10,TC:9,TS:8,AN:7,TSJ:6,JS:4,TI:4,ITSS:3,NORMA:9,CONVENIO:8,CRITERIO_ADMINISTRATIVO:5,CGT:2};
-export function normalize(value){return String(value||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase()}
+export function normalize(value){return String(value||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[¿?¡!.,;:()"«»\-]/g," ").replace(/\s+/g," ").trim()}
 export function isAdverse(status){return ADVERSE_STATUSES.has(String(status||"").toUpperCase())}
-const STOPWORDS=new Set(["por","una","uno","los","las","del","con","que","para","como","este","esta","estos","estas","sus","son","era","fue","ser","hay","muy","mas","más","tan","sin","tener","puedo","puede","pedir","tiempo","cuanto","cuánto","cuantos","cuántos","dias","días","meses","año","años","plazo","minimo","mínimo","maximo","máximo","legal","legales","corresponde","corresponden","correspondiente","derecho","derechos","caso","casos"]);
+const STOPWORDS=new Set(["por","una","uno","los","las","del","con","que","para","como","este","esta","estos","estas","sus","son","era","fue","ser","hay","muy","mas","más","tan","sin","tener","puedo","puede","pedir","tiempo","cuanto","cuánto","cuantos","cuántos","dias","días","meses","año","años","plazo","minimo","mínimo","maximo","máximo","legal","legales","corresponde","corresponden","correspondiente","derecho","derechos","caso","casos","forma","formas","manera","maneras","modo","modos","tipo","tipos","clase","clases","coger","coge","cogerlos","cogerlas","tengo","tener","tiene"]);
 export function termMatchCount(doc,query){const terms=normalize(query).split(/\s+/).filter(term=>term.length>3&&!STOPWORDS.has(term)),body=normalize(`${doc.title||""} ${doc.summary||""} ${doc.criteria||""} ${doc.current_rule_summary||""}`);return terms.filter(term=>body.includes(term)).length}
 export const TOPIC_CATEGORIES=[
   {slug:"jornada-horarios",label:"Jornada y horarios",keywords:["jornada","horario","descanso","turno","calendario laboral"]},
@@ -21,7 +21,7 @@ export const TOPIC_CATEGORIES=[
 export function categorizeTopic(doc){const text=normalize(`${doc.title||""} ${doc.matter||""}`);for(const category of TOPIC_CATEGORIES)if(category.keywords.some(keyword=>text.includes(keyword)))return category.slug;return"otras-materias"}
 export function isCaselaw(doc){return Boolean(doc.court_level)&&doc.court_level!=="CONVENIO"&&doc.court_level!=="LEY"}
 export function legalRank(doc,query,nowYear=new Date().getUTCFullYear()){
-  const terms=normalize(query).split(/\s+/).filter(term=>term.length>2),title=normalize(doc.title),matter=normalize(`${doc.matter||""} ${doc.submatter||""} ${doc.topics||""}`),body=normalize(`${title} ${matter} ${doc.company||""} ${doc.criteria||""} ${doc.summary||""}`);
+  const terms=normalize(query).split(/\s+/).filter(term=>term.length>2&&!STOPWORDS.has(term)),title=normalize(doc.title),matter=normalize(`${doc.matter||""} ${doc.submatter||""} ${doc.topics||""}`),body=normalize(`${title} ${matter} ${doc.company||""} ${doc.criteria||""} ${doc.summary||""}`);
   let score=0;for(const term of terms){if(body.includes(term))score+=2;if(title.includes(term))score+=3;if(matter.includes(term))score+=4}
   score+=(hierarchy[doc.court_level]||hierarchy[doc.source_type]||1)*.7;
   const year=Number(doc.year||String(doc.date||"").slice(0,4));if(year)score+=Math.max(0,3-(nowYear-year)*.12);
