@@ -43,7 +43,11 @@ export async function retrieve(env,question,filters={},limit=12){
   }
   const questionCategory=categorizeTopic({title:question});
   const lexicalScored=results.filter(doc=>(!filters.sector||doc.sector===filters.sector)&&(!filters.source_type||doc.source_type===filters.source_type)&&(!filters.otherSectorLabel||!(doc.document_type==="convenio"||doc.source_type==="CONVENIO"))).map(doc=>{let bonus=0;if(filters.sectorHint){if(doc.sector===filters.sectorHint){bonus+=8;if(filters.subsectorHint){if(doc.submatter===filters.subsectorHint)bonus+=20;else if(doc.submatter)bonus-=8}}else if(doc.sector==="laboral-general")bonus+=6;else if(doc.sector)bonus-=25}else if(doc.sector==="laboral-general")bonus+=4;const category=categorizeTopic(doc);if(isCaselaw(doc)&&category===questionCategory&&questionCategory!=="otras-materias")bonus+=6;return{...doc,category,bonus,termMatch:termMatchCount(doc,question),lexicalRank:legalRank(doc,question)+bonus}}).sort((a,b)=>b.lexicalRank-a.lexicalRank);
-  const semanticCandidates=lexicalScored.slice(0,60);
+  const topGeneral=lexicalScored.slice(0,50);
+  const topNormativa=lexicalScored.filter(d=>d.document_type==="normativa"||d.source_type==="NORMA").slice(0,25);
+  const topCaselaw=lexicalScored.filter(d=>isCaselaw(d)&&d.category===questionCategory).slice(0,15);
+  const seenIds=new Set();
+  const semanticCandidates=[...topGeneral,...topNormativa,...topCaselaw].filter(d=>seenIds.has(d.id)?false:(seenIds.add(d.id),true));
   const semanticScores=filters.semantic===false?new Map():await semanticRank(env,question,semanticCandidates.map(r=>r.id)).catch(()=>new Map());
   return lexicalScored.map(doc=>{const semanticScore=semanticScores.get(doc.id)||0;const semanticBonus=semanticScore>0.32?(semanticScore-0.3)*40:0;return{...doc,semanticScore,rank:doc.lexicalRank+semanticBonus}}).sort((a,b)=>b.rank-a.rank).slice(0,Math.min(limit,30))
 }

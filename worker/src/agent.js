@@ -36,7 +36,7 @@ export async function answerQuestion(env,question,filters={}){
   const otherSectorLabel=filters.otherSectorLabel?String(filters.otherSectorLabel).trim().slice(0,80):"";
   const sources=await retrieve(env,question,filters,12),displaySources=orderSourcesForDisplay(sources);
   if(!sources.length)return{answer:ruleBasedAnswer(question,[],otherSectorLabel),sources:[],mode:"documental"};
-  const relevantSources=sources.filter(source=>source.termMatch>0).sort((a,b)=>contextOrder(a)-contextOrder(b)||b.rank-a.rank);
+  const relevantSources=sources.filter(source=>source.termMatch>0||source.semanticScore>0.4).sort((a,b)=>contextOrder(a)-contextOrder(b)||b.rank-a.rank);
   if(!relevantSources.length)return{answer:ruleBasedAnswer(question,[],otherSectorLabel),sources:displaySources,mode:"documental"};
   const context=relevantSources.map((source,index)=>`[${index+1}] ${source.title}${isCaselaw(source)?` (JURISPRUDENCIA · categoría: ${categoryLabel(source.category)})`:""}\nTIPO: ${source.source_type||source.document_type||"NO CONSTA"}\nÓRGANO: ${source.court_level||"NO CONSTA"}\nESTADO: ${source.procedural_status||"SITUACIÓN PROCESAL NO VERIFICADA"}\nCRITERIO: ${source.current_rule_summary||source.criteria||source.summary||"NO CONSTA"}`).join("\n\n");
   const otherSectorInstruction=otherSectorLabel?`El usuario ha indicado que su sector es «${otherSectorLabel}», que no tiene convenio colectivo propio en esta biblioteca. Dilo expresamente al inicio de la RESPUESTA DIRECTA y responde solo con normativa laboral general (Estatuto de los Trabajadores u otra ley aplicable) y jurisprudencia general si consta en el CONTEXTO. Nunca atribuyas a ese sector un convenio de otro sector distinto.`:"";
