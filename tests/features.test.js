@@ -34,7 +34,7 @@ test("la respuesta se deriva de las fuentes y no de una consulta programada",asy
   const withoutSources=ruleBasedAnswer(query,[]);
   assert.doesNotMatch(withoutSources,/cinco días de permiso retribuido/i);
   const docs=JSON.parse(await readFile(new URL("../docs/data/documents.json",import.meta.url),"utf8"));
-  const permisoArticle=docs.find(item=>item.title==="Estatuto de los Trabajadores (RDL 2/2015) - Art. 37. Descanso semanal, fiestas y permisos");
+  const permisoArticle=docs.find(item=>item.title==="Estatuto de los Trabajadores (RDL 2/2015) - Art. 37.3.b. Cinco días por accidente o enfermedad graves");
   const answer=ruleBasedAnswer(query,[permisoArticle]);
   assert.match(answer,/cinco días/i);
   assert.match(answer,/hospitalización/i);
