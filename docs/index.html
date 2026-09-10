@@ -110,6 +110,15 @@
   <script src="config.js"></script>
   <script type="module" src="app.js?v=7"></script>
   <script type="module" src="pwa.js"></script>
+  <div id="updateOverlay" class="update-overlay" hidden role="alertdialog" aria-modal="true" aria-labelledby="updateOverlayTitle">
+    <div class="update-card">
+      <span class="update-icon" aria-hidden="true">⟳</span>
+      <p class="kicker" id="updateOverlayTitle">Nueva versión disponible</p>
+      <h2>Hay una actualización de la biblioteca</h2>
+      <p>Hemos corregido o mejorado algo en la aplicación. Actualiza para seguir usándola con los últimos cambios.</p>
+      <button id="updateNowBtn" type="button">Actualizar ahora</button>
+    </div>
+  </div>
 </body>
 </html>
 

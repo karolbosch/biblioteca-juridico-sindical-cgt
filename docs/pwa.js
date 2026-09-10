@@ -4,13 +4,22 @@ const installButton=document.querySelector("#installApp");
 const isStandalone=matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
 if("serviceWorker"in navigator&&manifest){
   const manifestUrl=new URL(manifest.href);
+  const overlay=document.querySelector("#updateOverlay"),updateBtn=document.querySelector("#updateNowBtn");
+  let pendingWorker=null;
+  function showUpdateOverlay(worker){pendingWorker=worker;if(overlay)overlay.hidden=false}
+  if(updateBtn)updateBtn.addEventListener("click",()=>{if(pendingWorker)pendingWorker.postMessage({type:"SKIP_WAITING"});updateBtn.disabled=true;updateBtn.textContent="Actualizando…"});
   navigator.serviceWorker.register(new URL("service-worker.js",manifestUrl)).then(registration=>{
     registration.update().catch(()=>{});
+    setInterval(()=>registration.update().catch(()=>{}),60000);
+    if(registration.waiting&&navigator.serviceWorker.controller)showUpdateOverlay(registration.waiting);
     registration.addEventListener("updatefound",()=>{
       const newWorker=registration.installing;
       if(!newWorker)return;
       newWorker.addEventListener("statechange",()=>{
-        if(newWorker.state==="installed"&&navigator.serviceWorker.controller)newWorker.postMessage({type:"SKIP_WAITING"})
+        if(newWorker.state==="installed"){
+          if(navigator.serviceWorker.controller)showUpdateOverlay(newWorker);
+          else newWorker.postMessage({type:"SKIP_WAITING"})
+        }
       })
     })
   }).catch(error=>console.warn("No se pudo registrar el modo offline",error));

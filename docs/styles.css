@@ -26,3 +26,11 @@
 .pdf-fallback{flex:1;overflow:auto;border:1px solid var(--line);border-radius:12px;padding:20px;background:var(--surface)}
 .pdf-text{white-space:pre-wrap;line-height:1.6;color:var(--ink)}
 @media(max-width:600px){.viewer-dialog{width:100vw;height:100vh;max-height:100vh;border-radius:0}.viewer-dialog #viewerContent{padding:14px}}
+.update-overlay{position:fixed;inset:0;z-index:9999;background:rgba(10,9,8,.92);display:flex;align-items:center;justify-content:center;padding:24px}
+.update-card{background:var(--panel-bg,#181614);border:2px solid var(--red);border-radius:18px;padding:36px 28px;max-width:400px;text-align:center;color:#fff;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.update-icon{display:inline-block;font-size:2.4rem;color:var(--red);margin-bottom:6px;animation:update-spin 2.5s linear infinite}
+@keyframes update-spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+.update-card h2{margin:6px 0 10px;font-size:1.3rem}
+.update-card p{color:#ddd;font-size:.92rem;margin:0 0 18px}
+.update-card button{width:100%;padding:14px;border:none;border-radius:12px;background:var(--red);color:#fff;font-weight:800;font-size:1rem;cursor:pointer}
+.update-card button:active{opacity:.85}
