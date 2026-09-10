@@ -6,6 +6,15 @@ export function normalize(value){return String(value||"").normalize("NFD").repla
 export function isAdverse(status){return ADVERSE_STATUSES.has(String(status||"").toUpperCase())}
 const STOPWORDS=new Set(["por","una","uno","los","las","del","con","que","para","como","este","esta","estos","estas","sus","son","era","fue","ser","hay","muy","mas","más","tan","sin","tener","puedo","puede","pedir","tiempo","cuanto","cuánto","cuantos","cuántos","dias","días","meses","año","años","plazo","minimo","mínimo","maximo","máximo","legal","legales","corresponde","corresponden","correspondiente","derecho","derechos","caso","casos","forma","formas","manera","maneras","modo","modos","tipo","tipos","clase","clases","coger","coge","cogerlos","cogerlas","tengo","tener","tiene"]);
 export function termMatchCount(doc,query){const terms=normalize(query).split(/\s+/).filter(term=>term.length>3&&!STOPWORDS.has(term)),body=normalize(`${doc.title||""} ${doc.summary||""} ${doc.criteria||""} ${doc.current_rule_summary||""}`);return terms.filter(term=>body.includes(term)).length}
+function negationMismatch(doc,question){
+  const q=normalize(question),t=normalize(doc.title);
+  const negatedWords=[...t.matchAll(/\bno\s+(\w{4,})/g)].map(m=>m[1].slice(0,Math.max(6,m[1].length-2)));
+  for(const stem of negatedWords){
+    const queryHasWord=q.includes(stem),queryHasNegation=new RegExp(`\\bno\\s+\\w*${stem}`).test(q);
+    if(queryHasWord&&!queryHasNegation)return true
+  }
+  return false
+}
 export const TOPIC_CATEGORIES=[
   {slug:"jornada-horarios",label:"Jornada y horarios",keywords:["jornada","horario","descanso","turno","calendario laboral"]},
   {slug:"permisos-excedencias",label:"Permisos y excedencias",keywords:["permiso","excedencia","licencia"]},
@@ -43,7 +52,7 @@ export async function retrieve(env,question,filters={},limit=12){
     try{const{results:generalDocs}=await env.DB.prepare(`SELECT ${fields} FROM documents d WHERE d.privacy_status IN ('PUBLICABLE','ANONIMIZACION_VERIFICADA') AND d.sector='laboral-general'`).all();const known=new Set(results.map(r=>r.id));for(const doc of generalDocs)if(!known.has(doc.id)){results.push(doc);known.add(doc.id)}}catch{}
   }
   const questionCategory=categorizeTopic({title:question});
-  const lexicalScored=results.filter(doc=>(!filters.sector||doc.sector===filters.sector)&&(!filters.source_type||doc.source_type===filters.source_type)&&(!filters.otherSectorLabel||!(doc.document_type==="convenio"||doc.source_type==="CONVENIO"))).map(doc=>{let bonus=0;if(filters.sectorHint){if(doc.sector===filters.sectorHint){bonus+=8;if(filters.subsectorHint){if(doc.submatter===filters.subsectorHint)bonus+=20;else if(doc.submatter)bonus-=8}}else if(doc.sector==="laboral-general")bonus+=6;else if(doc.sector)bonus-=25}else if(doc.sector==="laboral-general")bonus+=4;const category=categorizeTopic(doc);if(isCaselaw(doc)&&category===questionCategory&&questionCategory!=="otras-materias")bonus+=6;return{...doc,category,bonus,termMatch:termMatchCount(doc,question),lexicalRank:legalRank(doc,question)+bonus}}).sort((a,b)=>b.lexicalRank-a.lexicalRank);
+  const lexicalScored=results.filter(doc=>(!filters.sector||doc.sector===filters.sector)&&(!filters.source_type||doc.source_type===filters.source_type)&&(!filters.otherSectorLabel||!(doc.document_type==="convenio"||doc.source_type==="CONVENIO"))).map(doc=>{let bonus=0;if(filters.sectorHint){if(doc.sector===filters.sectorHint){bonus+=8;if(filters.subsectorHint){if(doc.submatter===filters.subsectorHint)bonus+=20;else if(doc.submatter)bonus-=8}}else if(doc.sector==="laboral-general")bonus+=6;else if(doc.sector)bonus-=25}else if(doc.sector==="laboral-general")bonus+=4;const category=categorizeTopic(doc);if(isCaselaw(doc)&&category===questionCategory&&questionCategory!=="otras-materias")bonus+=6;if(negationMismatch(doc,question))bonus-=40;return{...doc,category,bonus,termMatch:termMatchCount(doc,question),lexicalRank:legalRank(doc,question)+bonus}}).sort((a,b)=>b.lexicalRank-a.lexicalRank);
   const topGeneral=lexicalScored.slice(0,50);
   const topNormativa=lexicalScored.filter(d=>d.document_type==="normativa"||d.source_type==="NORMA").slice(0,25);
   const topCaselaw=lexicalScored.filter(d=>isCaselaw(d)&&d.category===questionCategory).slice(0,15);
