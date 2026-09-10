@@ -33,6 +33,7 @@ export function orderSourcesForDisplay(sources){return[...sources].sort((a,b)=>s
 export function sourcesFooter(sources){if(!sources||!sources.length)return"FUENTES\n\nNo se ha localizado ninguna fuente concreta en la biblioteca para esta consulta.";const lines=orderSourcesForDisplay(sources).slice(0,6).map((source,index)=>{const ref=source.resolution_number?` (${source.resolution_number})`:"";const date=source.date?` — ${source.date}`:"";return`${index+1}. ${source.title}${ref}${date}`});return`FUENTES\n\n${lines.join("\n")}`}
 function ftsQuery(question){return normalize(question).split(/[^a-z0-9ñ]+/).filter(term=>term.length>2).slice(0,10).map(term=>`"${term.replace(/"/g,"")}"*`).join(" OR ")}
 const fields="d.id,d.title,d.document_type,d.source_type,d.sector,d.court_level,d.resolution_number,d.date,d.year,d.company,d.matter,d.submatter,d.outcome,d.procedural_status,d.privacy_status,d.source_url,d.document_status,d.chain_id,d.final_authority,d.current_rule_summary,d.summary,d.criteria,d.pdf_public_path,d.public_path";
+function articleFamily(title){const m=String(title||"").match(/^(.*Art\.\s*\d+)\.[a-h]\d?\./);return m?m[1]:null}
 export async function retrieve(env,question,filters={},limit=12){
   let results=[];const terms=normalize(question).split(/\s+/).filter(term=>term.length>2);if(!terms.length)return[];const query=ftsQuery(question);
   if(query){try{({results}=await env.DB.prepare(`SELECT ${fields},bm25(documents_fts) AS text_score FROM documents_fts JOIN documents d ON d.id=documents_fts.rowid WHERE documents_fts MATCH ? AND d.privacy_status IN ('PUBLICABLE','ANONIMIZACION_VERIFICADA') LIMIT 80`).bind(query).all())}catch{results=[]}}
@@ -49,7 +50,19 @@ export async function retrieve(env,question,filters={},limit=12){
   const seenIds=new Set();
   const semanticCandidates=[...topGeneral,...topNormativa,...topCaselaw].filter(d=>seenIds.has(d.id)?false:(seenIds.add(d.id),true));
   const semanticScores=filters.semantic===false?new Map():await semanticRank(env,question,semanticCandidates.map(r=>r.id)).catch(()=>new Map());
-  return lexicalScored.map(doc=>{const semanticScore=semanticScores.get(doc.id)||0;const semanticBonus=semanticScore>0.32?(semanticScore-0.3)*40:0;return{...doc,semanticScore,rank:doc.lexicalRank+semanticBonus}}).sort((a,b)=>b.rank-a.rank).slice(0,Math.min(limit,30))
+  let ranked=lexicalScored.map(doc=>{const semanticScore=semanticScores.get(doc.id)||0;const semanticBonus=semanticScore>0.32?(semanticScore-0.3)*40:0;return{...doc,semanticScore,rank:doc.lexicalRank+semanticBonus}}).sort((a,b)=>b.rank-a.rank);
+  const meaningfulTerms=terms.filter(t=>!STOPWORDS.has(t));
+  if(meaningfulTerms.length<=2&&ranked.length){
+    const family=articleFamily(ranked[0].title);
+    if(family){
+      try{const{results:siblings}=await env.DB.prepare(`SELECT ${fields} FROM documents d WHERE d.privacy_status IN ('PUBLICABLE','ANONIMIZACION_VERIFICADA') AND d.title LIKE ?`).bind(`${family}.%`).all();
+        const known=new Set(ranked.map(r=>r.id));
+        const familyDocs=(siblings||[]).filter(s=>!known.has(s.id)).map(doc=>({...doc,category:categorizeTopic(doc),termMatch:termMatchCount(doc,question)||1,semanticScore:0.4,rank:(ranked[0].rank||0)+1}));
+        ranked=[...familyDocs,...ranked]
+      }catch{}
+    }
+  }
+  return ranked.slice(0,Math.min(limit,30))
 }
 export function ruleBasedAnswer(question,sources,otherSectorLabel){
   const otherSectorNote=otherSectorLabel?`No consta en la biblioteca un convenio colectivo específico para el sector indicado («${otherSectorLabel}»). La respuesta se basa únicamente en normativa laboral general y jurisprudencia de aplicación transversal; debe verificarse si existe un convenio propio de esa actividad no incorporado aún a esta biblioteca.\n\n`:"";
