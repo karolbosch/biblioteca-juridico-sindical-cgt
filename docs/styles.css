@@ -34,3 +34,6 @@
 .update-card p{color:#ddd;font-size:.92rem;margin:0 0 18px}
 .update-card button{width:100%;padding:14px;border:none;border-radius:12px;background:var(--red);color:#fff;font-weight:800;font-size:1rem;cursor:pointer}
 .update-card button:active{opacity:.85}
+.viewer-relations-title{margin:18px 0 8px;font-size:.95rem;text-transform:uppercase;letter-spacing:.03em;color:var(--red)}
+.viewer-relations-list{list-style:none;padding:0;margin:0;display:grid;gap:8px}
+.viewer-relations-list li{font-size:.85rem;line-height:1.4;color:#ddd;border-left:2px solid var(--red);padding-left:10px}
