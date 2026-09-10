@@ -9,7 +9,7 @@ import{adminGetSettings,adminUpdateSettings,publicSettings}from"./settings.js";
 import{listHistory,recordQuery}from"./history.js";
 import{telemarketingLibrary}from"./telemarketing.js";
 import{embedMissingBatch}from"./semantic.js";
-import{documentRelations}from"./relations.js";
+import{documentRelations,documentByDocId}from"./relations.js";
 
 async function audit(env,actor,action,entityType,entityId,details={}){await env.DB.prepare("INSERT INTO audit_log(actor,action,entity_type,entity_id,details_json) VALUES(?,?,?,?,?)").bind(actor,action,entityType,entityId,JSON.stringify(details)).run()}
 
@@ -64,6 +64,7 @@ export async function route(request,env){
   if(url.pathname==="/api/settings"&&request.method==="GET")return publicSettings(env,headers);
   if(url.pathname==="/api/sectors"&&request.method==="GET")return listSectors(env,headers);
   {const relMatch=url.pathname.match(/^\/api\/documents\/(\d+)\/relations$/);if(relMatch&&request.method==="GET")return documentRelations(env,headers,relMatch[1])}
+  {const docIdMatch=url.pathname.match(/^\/api\/documents\/by-doc-id\/(DOC-\d+)$/);if(docIdMatch&&request.method==="GET")return documentByDocId(env,headers,docIdMatch[1])}
   if(url.pathname==="/api/_test_embedding"&&request.method==="GET"){const r=await env.AI.run("@cf/baai/bge-m3",{text:["cuantos dias tengo de vacaciones"]});return json(r,200,headers)}
 
   if(url.pathname.startsWith("/api/admin/")){
