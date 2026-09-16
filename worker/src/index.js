@@ -9,13 +9,15 @@ import{adminGetSettings,adminUpdateSettings,publicSettings}from"./settings.js";
 import{listHistory,recordQuery}from"./history.js";
 import{telemarketingLibrary}from"./telemarketing.js";
 import{embedMissingBatch}from"./semantic.js";
-import{documentRelations,documentByDocId}from"./relations.js";
+import{documentRelations,documentByDocId,documentFileByDocId,documentTextByDocId}from"./relations.js";
 
 async function audit(env,actor,action,entityType,entityId,details={}){await env.DB.prepare("INSERT INTO audit_log(actor,action,entity_type,entity_id,details_json) VALUES(?,?,?,?,?)").bind(actor,action,entityType,entityId,JSON.stringify(details)).run()}
 
 const SECTOR_LABELS={"contact-center":"Contact Center / Telemarketing","servicios":"Servicios (seguridad, limpieza, jardinería, taxi…)","construccion-metal-industria":"Construcción, Metal e Industria","comercio-finanzas-seguros":"Comercio, Banca y Seguros","social-dependencia-ensenanza":"Social, Dependencia y Enseñanza","hosteleria-turismo-alimentacion":"Hostelería, Turismo y Alimentación"};
 const SUBSECTOR_LABELS={"jardineria":"Jardinería","mantenimiento-instalaciones-acuaticas":"Instalaciones acuáticas","servicios-auxiliares":"Servicios auxiliares (recepción/control accesos)","autoescuelas":"Autoescuelas","auto-taxis":"Auto-Taxis","bingo":"Salas de bingo","peluquerias-gimnasios":"Peluquerías y gimnasios","seguridad-privada":"Seguridad privada","artes-graficas":"Artes gráficas","curtidos-peleteria":"Curtidos y peletería","textil-confeccion":"Textil y confección","pastas-papel-carton":"Pastas, papel y cartón","construccion":"Construcción","industria-quimica":"Industria química","metal":"Metal","industrias-extractivas-vidrio-ceramica":"Extractivas, vidrio y cerámica","atencion-discapacidad":"Atención a la discapacidad","ensenanza-privada-concertada":"Enseñanza privada concertada","atencion-dependencia":"Atención a la dependencia","ocio-educativo":"Ocio educativo","reforma-juvenil":"Reforma juvenil","accion-social":"Acción social","seguros":"Seguros","cooperativas-credito":"Cooperativas de crédito","banca":"Banca","cajas-ahorro":"Cajas de ahorro","establecimientos-financieros":"Establecimientos financieros de crédito","grandes-almacenes":"Grandes almacenes"};
-async function listSectors(env,headers){
+async function listSectors(env,headers,request){
+  const cache=caches.default,cacheKey=new Request("https://cache.internal/api-sectors-v1");
+  if(request){const cached=await cache.match(cacheKey);if(cached){const body=await cached.json();return json(body,200,headers)}}
   const{results}=await env.DB.prepare("SELECT sector, submatter, count(*) c FROM documents WHERE privacy_status IN ('PUBLICABLE','ANONIMIZACION_VERIFICADA') AND sector IS NOT NULL AND sector!='' AND sector NOT IN ('laboral-general','catalogos') GROUP BY sector, submatter ORDER BY sector, c DESC").all();
   const bySector=new Map();
   for(const row of results||[]){
@@ -24,7 +26,9 @@ async function listSectors(env,headers){
     if(row.submatter)entry.subsectors.push({value:row.submatter,label:SUBSECTOR_LABELS[row.submatter]||row.submatter,count:row.c});
   }
   const sectors=[...bySector.values()].sort((a,b)=>b.count-a.count);
-  return json({sectors},200,headers)
+  const body={sectors};
+  if(request)await cache.put(cacheKey,new Response(JSON.stringify(body),{headers:{"content-type":"application/json","cache-control":"public, max-age=1800"}}));
+  return json(body,200,headers)
 }
 
 export async function route(request,env){
@@ -62,9 +66,13 @@ export async function route(request,env){
   const publicFile=url.pathname.match(/^\/api\/documents\/(\d+)\/file$/);
   if(publicFile&&request.method==="GET")return publicDocumentFile(env,headers,publicFile[1]);
   if(url.pathname==="/api/settings"&&request.method==="GET")return publicSettings(env,headers);
-  if(url.pathname==="/api/sectors"&&request.method==="GET")return listSectors(env,headers);
+  if(url.pathname==="/api/sectors"&&request.method==="GET")return listSectors(env,headers,request);
   {const relMatch=url.pathname.match(/^\/api\/documents\/(\d+)\/relations$/);if(relMatch&&request.method==="GET")return documentRelations(env,headers,relMatch[1])}
   {const docIdMatch=url.pathname.match(/^\/api\/documents\/by-doc-id\/(DOC-\d+)$/);if(docIdMatch&&request.method==="GET")return documentByDocId(env,headers,docIdMatch[1])}
+  {const m=url.pathname.match(/^\/api\/documents\/(DOC-\d+)$/);if(m&&request.method==="GET")return documentByDocId(env,headers,m[1])}
+  {const m=url.pathname.match(/^\/api\/documents\/(DOC-\d+)\/file$/);if(m&&request.method==="GET")return documentFileByDocId(env,headers,m[1],url.searchParams.get("page"))}
+  {const m=url.pathname.match(/^\/api\/documents\/(DOC-\d+)\/text$/);if(m&&request.method==="GET")return documentTextByDocId(env,headers,m[1],url.searchParams.get("page"))}
+  {const m=url.pathname.match(/^\/api\/documents\/(DOC-\d+)\/relations$/);if(m&&request.method==="GET")return documentRelations(env,headers,m[1])}
   if(url.pathname==="/api/_test_embedding"&&request.method==="GET"){const r=await env.AI.run("@cf/baai/bge-m3",{text:["cuantos dias tengo de vacaciones"]});return json(r,200,headers)}
 
   if(url.pathname.startsWith("/api/admin/")){
